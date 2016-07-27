@@ -11,6 +11,13 @@
         }
         return {
             restrict: "AE",
+            controller: ['$scope', function($scope){
+              // Listen to the card layout changes and recompute
+              // the viewport when there are changes
+              // so that the appropriate items can be 
+              // watched
+              $scope.$on('UpdateWatchedElements', debouncedViewportUpdate);
+            }],
             link: function(scope, element, attr) {
                 var elementWatcher = scrollMonitor.create(element, scope.$eval(attr.viewportWatch || "0"));
                 function watchDuringDisable() {
