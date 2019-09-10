@@ -31,6 +31,8 @@
                     // After the addition of sticky states, we want to ignore toggling the
                     // watchers when these elements are not being displayed.
                     if (attr.viewportWatch && !$state.includes(attr.viewportWatch)) {
+                      // This should not happen since we have already stopped the
+                      // listeners, but handle it for safety.
                       return;
                     }
 
@@ -70,12 +72,32 @@
                 function enableDigest() {
                     toggleWatchers(scope, true);
                 }
+
+                // This function updates the listeners to on or off based on whether
+                // this the currently active base state
+                function updateListeners() {
+                  if (!attr.viewportWatch || $state.includes(attr.viewportWatch)) {
+                    elementWatcher.enterViewport(enableDigest);
+                    elementWatcher.exitViewport(disableDigest);
+                  } else {
+                    elementWatcher.off('enterViewport', enableDigest);
+                    elementWatcher.off('exitViewport', enableDigest);
+                  }
+                }
+
+                scope.$on('app.tab.change', function(){
+                  // When the app tab changes, update the listeners. This allows
+                  // us to listen for the viewport for the relevant cards
+                  updateListeners();
+                });
+
                 if (!elementWatcher.isInViewport) {
                     scope.$evalAsync(disableDigest);
                     debouncedViewportUpdate();
                 }
-                elementWatcher.enterViewport(enableDigest);
-                elementWatcher.exitViewport(disableDigest);
+
+                updateListeners();
+
                 scope.$on("toggleWatchers", function(event, enable) {
                     toggleWatchers(scope, enable);
                 });
