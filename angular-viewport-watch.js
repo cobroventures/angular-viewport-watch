@@ -88,6 +88,10 @@
                 scope.$on('app.tab.change', function(){
                   // When the app tab changes, update the listeners. This allows
                   // us to listen for the viewport for the relevant cards
+                  // This tab change is needed so that when the tab changes, the viewport
+                  // and watches need to be recomputed since the tab cards might have changed
+                  // in the tab that we are switching to in the time that this tab was not
+                  // visible.
                   updateListeners();
                 });
 
