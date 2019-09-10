@@ -1,7 +1,7 @@
 "use strict";
 
 (function() {
-    function viewportWatch(scrollMonitor, $timeout) {
+    function viewportWatch(scrollMonitor, $timeout, $state) {
         var viewportUpdateTimeout;
         function debouncedViewportUpdate() {
             $timeout.cancel(viewportUpdateTimeout);
@@ -14,7 +14,7 @@
             controller: ['$scope', function($scope){
               // Listen to the card layout changes and recompute
               // the viewport when there are changes
-              // so that the appropriate items can be 
+              // so that the appropriate items can be
               // watched
               $scope.$on('UpdateWatchedElements', debouncedViewportUpdate);
             }],
@@ -28,6 +28,12 @@
                     return unwatch;
                 }
                 function toggleWatchers(scope, enable) {
+                    // After the addition of sticky states, we want to ignore toggling the
+                    // watchers when these elements are not being displayed.
+                    if (attr.viewportWatch && !$state.includes(attr.viewportWatch)) {
+                      return;
+                    }
+
                     var digest, current, next = scope;
                     do {
                         current = next;
@@ -80,6 +86,6 @@
             }
         };
     }
-    viewportWatch.$inject = [ "scrollMonitor", "$timeout" ];
+    viewportWatch.$inject = [ "scrollMonitor", "$timeout", "$state" ];
     angular.module("angularViewportWatch", []).directive("viewportWatch", viewportWatch).value("scrollMonitor", window.scrollMonitor);
 })();
