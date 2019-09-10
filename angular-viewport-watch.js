@@ -80,6 +80,8 @@
                     elementWatcher.enterViewport(enableDigest);
                     elementWatcher.exitViewport(disableDigest);
                   } else {
+                    // This will stop listnening for the enter and exit viewport events. However, This will
+                    // not disabled watches on the elements themselves.
                     elementWatcher.off('enterViewport', enableDigest);
                     elementWatcher.off('exitViewport', enableDigest);
                   }
@@ -87,11 +89,15 @@
 
                 scope.$on('app.tab.change', function(){
                   // When the app tab changes, update the listeners. This allows
-                  // us to listen for the viewport for the relevant cards
-                  // This tab change is needed so that when the tab changes, the viewport
-                  // and watches need to be recomputed since the tab cards might have changed
-                  // in the tab that we are switching to in the time that this tab was not
-                  // visible.
+                  // us to listen for the viewport (enter and exit) events for the relevant elements.
+                  // This tab change is needed because:
+                  // 1. Say we are in tab A, and 5 elements have their watches enabled and 4 do not.
+                  // 2. Switch to tab B.
+                  // 3. While user is in tab B, there is a change so say the 5 elements above get deleted
+                  // 4. Since we are going to ignore the events in tab A, watches are the 4 elements that will be
+                  // in the viewport.
+                  // 5. This to tab A. At this point we will reattach the listeners to the 4 elements that
+                  // are in tab A.
                   updateListeners();
                 });
 
