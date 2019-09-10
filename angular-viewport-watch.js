@@ -27,13 +27,15 @@
                     this.$$watchers = null;
                     return unwatch;
                 }
-                function toggleWatchers(scope, enable) {
-                    // After the addition of sticky states, we want to ignore toggling the
-                    // watchers when these elements are not being displayed.
-                    if (attr.viewportWatch && !$state.includes(attr.viewportWatch)) {
-                      // This should not happen since we have already stopped the
-                      // listeners, but handle it for safety.
-                      return;
+                function toggleWatchers(scope, enable, performViewportCheck) {
+
+                    if (performViewportCheck && enable) {
+                      // If the performViewportCheck is true, make sure that the element is in
+                      // viewport before proceeding. This happens in, for instance, tab change
+                      // in the app.
+                      if (!elementWatcher.isInViewport) {
+                        return;
+                      }
                     }
 
                     var digest, current, next = scope;
@@ -73,21 +75,35 @@
                     toggleWatchers(scope, true);
                 }
 
-                // This function updates the listeners to on or off based on whether
-                // this the currently active base state
-                function updateListeners() {
-                  if (!attr.viewportWatch || $state.includes(attr.viewportWatch)) {
+                /**
+                 * @scope
+                 * @function updateListeners
+                 *
+                 * @description This function updates the listeners to on or off based on app tab change.
+                 *
+                 * @param {object} changeParams - supported options are
+                 * enableWatchers - If true, enable the watchers if the element is in viewport. Also bind
+                 * the event handlers for enter and exit viewport
+                 * If false, disable watchers and unbind the event handlers
+
+                 */
+                function updateListeners(changeParams) {
+                  if (changeParams.enableWatchers) {
+                    // Start listening for enter and exit viewport
                     elementWatcher.enterViewport(enableDigest);
                     elementWatcher.exitViewport(disableDigest);
-                  } else {
-                    // This will stop listnening for the enter and exit viewport events. However, This will
-                    // not disabled watches on the elements themselves.
+                  }  else {
+                    // This will stop listnening for the enter and exit viewport events.
                     elementWatcher.off('enterViewport', enableDigest);
-                    elementWatcher.off('exitViewport', enableDigest);
+                    elementWatcher.off('exitViewport', disableDigest);
                   }
+
+                  // Enable or disable watches on these element and all its
+                  // children
+                  toggleWatchers(scope, changeParams.enableWatchers, true);
                 }
 
-                scope.$on('app.tab.change', function(){
+                scope.$on('app.tab.change', function($event, changeParams){
                   // When the app tab changes, update the listeners. This allows
                   // us to listen for the viewport (enter and exit) events for the relevant elements.
                   // This tab change is needed because:
@@ -98,15 +114,8 @@
                   // in the viewport.
                   // 5. This to tab A. At this point we will reattach the listeners to the 4 elements that
                   // are in tab A.
-                  updateListeners();
+                  updateListeners(changeParams);
                 });
-
-                if (!elementWatcher.isInViewport) {
-                    scope.$evalAsync(disableDigest);
-                    debouncedViewportUpdate();
-                }
-
-                updateListeners();
 
                 scope.$on("toggleWatchers", function(event, enable) {
                     toggleWatchers(scope, enable);
