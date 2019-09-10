@@ -1,7 +1,7 @@
 "use strict";
 
 (function() {
-    function viewportWatch(scrollMonitor, $timeout, $state) {
+    function viewportWatch(scrollMonitor, $timeout) {
         var viewportUpdateTimeout;
         function debouncedViewportUpdate() {
             $timeout.cancel(viewportUpdateTimeout);
@@ -85,7 +85,7 @@
                  * enableWatchers - If true, enable the watchers if the element is in viewport. Also bind
                  * the event handlers for enter and exit viewport
                  * If false, disable watchers and unbind the event handlers
-
+                 *
                  */
                 function updateListeners(changeParams) {
                   if (changeParams.enableWatchers) {
@@ -127,6 +127,6 @@
             }
         };
     }
-    viewportWatch.$inject = [ "scrollMonitor", "$timeout", "$state" ];
+    viewportWatch.$inject = [ "scrollMonitor", "$timeout" ];
     angular.module("angularViewportWatch", []).directive("viewportWatch", viewportWatch).value("scrollMonitor", window.scrollMonitor);
 })();
