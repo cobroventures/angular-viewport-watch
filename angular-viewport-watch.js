@@ -115,14 +115,7 @@
                 scope.$on('toggleMonitoringAndWatches', function($event, changeParams){
                   // When the app tab changes, update the listeners. This allows
                   // us to listen for the viewport (enter and exit) events for the relevant elements.
-                  // This tab change is needed because:
-                  // 1. Say we are in tab A, and 5 elements have their watches enabled and 4 do not.
-                  // 2. Switch to tab B.
-                  // 3. While user is in tab B, there is a change so say the 5 elements above get deleted
-                  // 4. Since we are going to ignore the events in tab A, watches are the 4 elements that will be
-                  // in the viewport.
-                  // 5. This to tab A. At this point we will reattach the listeners to the 4 elements that
-                  // are in tab A.
+                  // Since we stopped listening for the events, we need to listen for these events now.
                   updateListeners(changeParams);
                 });
 
