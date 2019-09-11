@@ -113,9 +113,9 @@
                 elementWatcher.exitViewport(disableDigest);
 
                 scope.$on('toggleMonitoringAndWatches', function($event, changeParams){
-                  // When the app tab changes, update the listeners. This allows
+                  // When the request for toggleMonitoringAndWatches comes update the listeners. This allows
                   // us to listen for the viewport (enter and exit) events for the relevant elements.
-                  // Since we stopped listening for the events, we need to listen for these events now.
+                  // Since we stopped listening for the events, we need to listen for these events now (or vice-versa)
                   updateListeners(changeParams);
                 });
 
