@@ -75,6 +75,11 @@
                     toggleWatchers(scope, true);
                 }
 
+                if (!elementWatcher.isInViewport) {
+                    scope.$evalAsync(disableDigest);
+                    debouncedViewportUpdate();
+                }
+
                 /**
                  * @scope
                  * @function updateListeners
