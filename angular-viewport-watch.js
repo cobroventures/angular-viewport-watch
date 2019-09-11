@@ -103,7 +103,11 @@
                   toggleWatchers(scope, changeParams.enableWatchers, true);
                 }
 
-                scope.$on('app.tab.change', function($event, changeParams){
+                // Start listening for enter and exit viewport
+                elementWatcher.enterViewport(enableDigest);
+                elementWatcher.exitViewport(disableDigest);
+
+                scope.$on('toggleMonitoringAndWatches', function($event, changeParams){
                   // When the app tab changes, update the listeners. This allows
                   // us to listen for the viewport (enter and exit) events for the relevant elements.
                   // This tab change is needed because:
