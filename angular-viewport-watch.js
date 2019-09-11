@@ -14,7 +14,7 @@
             controller: ['$scope', function($scope){
               // Listen to the card layout changes and recompute
               // the viewport when there are changes
-              // so that the appropriate items can be 
+              // so that the appropriate items can be
               // watched
               $scope.$on('UpdateWatchedElements', debouncedViewportUpdate);
             }],
@@ -27,7 +27,17 @@
                     this.$$watchers = null;
                     return unwatch;
                 }
-                function toggleWatchers(scope, enable) {
+                function toggleWatchers(scope, enable, performViewportCheck) {
+
+                    if (performViewportCheck && enable) {
+                      // If the performViewportCheck is true, make sure that the element is in
+                      // viewport before proceeding. This happens in, for instance, tab change
+                      // in the app.
+                      if (!elementWatcher.isInViewport) {
+                        return;
+                      }
+                    }
+
                     var digest, current, next = scope;
                     do {
                         current = next;
@@ -64,12 +74,51 @@
                 function enableDigest() {
                     toggleWatchers(scope, true);
                 }
+
                 if (!elementWatcher.isInViewport) {
                     scope.$evalAsync(disableDigest);
                     debouncedViewportUpdate();
                 }
+
+                /**
+                 * @scope
+                 * @function updateListeners
+                 *
+                 * @description This function updates the listeners to on or off based on app tab change.
+                 *
+                 * @param {object} changeParams - supported options are
+                 * enableWatchers - If true, enable the watchers if the element is in viewport. Also bind
+                 * the event handlers for enter and exit viewport
+                 * If false, disable watchers and unbind the event handlers
+                 *
+                 */
+                function updateListeners(changeParams) {
+                  if (changeParams.enableWatchers) {
+                    // Start listening for enter and exit viewport
+                    elementWatcher.enterViewport(enableDigest);
+                    elementWatcher.exitViewport(disableDigest);
+                  }  else {
+                    // This will stop listnening for the enter and exit viewport events.
+                    elementWatcher.off('enterViewport', enableDigest);
+                    elementWatcher.off('exitViewport', disableDigest);
+                  }
+
+                  // Enable or disable watches on these element and all its
+                  // children
+                  toggleWatchers(scope, changeParams.enableWatchers, true);
+                }
+
+                // Start listening for enter and exit viewport
                 elementWatcher.enterViewport(enableDigest);
                 elementWatcher.exitViewport(disableDigest);
+
+                scope.$on('toggleMonitoringAndWatches', function($event, changeParams){
+                  // When the request for toggleMonitoringAndWatches comes update the listeners. This allows
+                  // us to listen for the viewport (enter and exit) events for the relevant elements.
+                  // Since we stopped listening for the events, we need to listen for these events now (or vice-versa)
+                  updateListeners(changeParams);
+                });
+
                 scope.$on("toggleWatchers", function(event, enable) {
                     toggleWatchers(scope, enable);
                 });
