@@ -19,6 +19,17 @@
               $scope.$on('UpdateWatchedElements', debouncedViewportUpdate);
             }],
             link: function(scope, element, attr) {
+              // This directive is typically used with ng-repeat. So there are possibly hundreds or
+              // thousands of directives being created. We do not want to perform the expensive scroll
+              // monitor calculations in the same event loop. So delay this by one tick and a
+              // moderate run time improvement is seen for ~1000 directives and a more significant
+              // improvement is run time is seen when ~5000 directives are being created.
+              // This does not affect any other behavior of the viewport watch. As before, the watches
+              // are first added, and then the directive removes some of the watches. So the timeout
+              // has no impact in terms of the watches.
+              $timeout(initViewportWatch, 0, false);
+
+              function initViewportWatch(){
                 var elementWatcher = scrollMonitor.create(element, scope.$eval(attr.viewportWatch || "0"));
                 function watchDuringDisable() {
                     this.$$watchersBackup = this.$$watchersBackup || [];
@@ -126,6 +137,7 @@
                     elementWatcher.destroy();
                     debouncedViewportUpdate();
                 });
+              }
             }
         };
     }
